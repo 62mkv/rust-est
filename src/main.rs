@@ -41,7 +41,7 @@ fn decode_analyze_result(input: &[u8]) -> Result<String, String> {
 }
 
 fn analyze_dll(text: *const u8, len: u16) -> std::io::Result<()> {
-    let lib = libloading::Library::new("dll/ana.dll")?;
+    let lib = libloading::Library::new("ana.dll")?;
     unsafe {
         let external_analyze: libloading::Symbol<unsafe extern fn(p: *const u8, len: u16) -> ()> = lib.get(b"analyys")?;
         Ok(external_analyze(text, len))
@@ -50,7 +50,7 @@ fn analyze_dll(text: *const u8, len: u16) -> std::io::Result<()> {
 
 fn main() {
     match analyys("tulla") {
-        Result::Ok(s) => println!("Analyys for tulen: {:?}", s),
+        Result::Ok(s) => println!("Analyys for tulla: {:?}", s),
         Result::Err(e) => println!("Error occurred: {}", e)
     }
 }
