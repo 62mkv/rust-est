@@ -6,12 +6,15 @@
 //procedure sea_tuletusega (i : boolean); far stdcall external 'ana.dll';
 //procedure sea_liitsqna (i : boolean); far stdcall external 'ana.dll';
 
+#[macro_use]
+extern crate clap;
 extern crate encoding;
 extern crate libloading as dll;
 
 use std::ffi::CStr;
 use std::io::{Error, ErrorKind};
 
+use clap::App;
 use encoding::{DecoderTrap, EncoderTrap, Encoding};
 use encoding::all::WINDOWS_1257;
 
@@ -27,7 +30,7 @@ fn analyys(s: &str) -> Result<String, String> {
 fn analyze_encoded(mut encoded_word: Vec<u8>) -> Result<String, String> {
     const LEN: u16 = 4096;
     encoded_word.resize(4096, 0);
-    if let Err(e) = analyze_dll(encoded_word.as_mut_ptr() as *const u8, LEN) {
+    if let Err(e) = dll_analyze_word(encoded_word.as_mut_ptr() as *const u8, LEN) {
         return Err(e.to_string());
     }
     unsafe {
@@ -43,12 +46,24 @@ fn decode_analyze_result(input: &[u8]) -> Result<String, String> {
     }
 }
 
-fn analyze_dll(text: *const u8, len: u16) -> std::io::Result<()> {
+fn dll_analyze_word(text: *const u8, len: u16) -> std::io::Result<()> {
     unsafe {
         match ANA_DLL {
             Some(ref lib) => {
-                let external_analyze: libloading::Symbol<unsafe extern "stdcall" fn(p: *const u8, len: u16) -> ()> = lib.get(b"analyys")?;
-                Ok(external_analyze(text, len))
+                let fun: libloading::Symbol<unsafe extern "stdcall" fn(p: *const u8, len: u16) -> ()> = lib.get(b"analyys")?;
+                Ok(fun(text, len))
+            }
+            None => Err(Error::from(ErrorKind::NotFound))
+        }
+    }
+}
+
+fn dll_set_analyze_type(code: u16) -> std::io::Result<()> {
+    unsafe {
+        match ANA_DLL {
+            Some(ref lib) => {
+                let fun: libloading::Symbol<unsafe extern "stdcall" fn(code: u16) -> ()> = lib.get(b"sea_vxljundvorm")?;
+                Ok(fun(code))
             }
             None => Err(Error::from(ErrorKind::NotFound))
         }
@@ -62,8 +77,18 @@ fn main() {
             Err(_) => panic!("DLL not loaded")
         }
     }
-    match analyys("tulla") {
-        Result::Ok(s) => println!("Analyys for tulla: {:?}", s),
+
+    let yaml = load_yaml!("cli.yaml");
+    let matches = App::from_yaml(yaml).get_matches();
+
+    // TODO: add support to specify analyze type code via command-line argument
+    #[allow(unused_must_use)] {
+        dll_set_analyze_type(1);
+    }
+
+    let word = matches.value_of("WORD_TO_ANALYZE").unwrap();
+    match analyys(word) {
+        Result::Ok(s) => print!("Analyze for {:?}:\n{}", word, s),
         Result::Err(e) => println!("Error occurred: {}", e)
     }
 }

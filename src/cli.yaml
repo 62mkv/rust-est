@@ -1,0 +1,9 @@
+name: rust-est
+version: "1.0"
+author: Kirill Marchuk <62mkv@mail.ru>
+about: Analyzes Estonian words
+args:
+  - WORD_TO_ANALYZE:
+      help: Which word to analyze
+      index: 1
+      required: true

@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 libloading = "0.5"
 encoding = "0.2"
+clap = { version = "~2.33.0", features = ["yaml"] }
