@@ -2,8 +2,18 @@ name: rust-est
 version: "0.1.0"
 author: Kirill Marchuk <62mkv@mail.ru>
 about: Analyzes Estonian words
-args:
-  - WORD_TO_ANALYZE:
-      help: Which word to analyze
-      index: 1
-      required: true
+subcommands:
+  - analyze:
+      about: analyze given word
+      args:
+        - WORD_TO_PROCESS:
+            help: Which word to analyze
+            index: 1
+            required: true
+  - synthesize:
+      about: synthesize (produce forms) for a given word
+      args:
+        - WORD_TO_PROCESS:
+            help: Which word to synthesize
+            index: 1
+            required: true

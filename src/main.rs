@@ -22,27 +22,27 @@ static mut ANA_DLL: Option<dll::Library> = None;
 
 fn analyys(s: &str) -> Result<String, String> {
     match WINDOWS_1257.encode(s, EncoderTrap::Strict) {
-        Ok(vec) => analyze_encoded(vec),
+        Ok(vec) => process_encoded(vec, &dll_analyze_word),
         Err(e) => Err(e.into_owned())
     }
 }
 
-fn analyze_encoded(mut encoded_word: Vec<u8>) -> Result<String, String> {
+fn decode_result(input: &[u8]) -> Result<String, String> {
+    match WINDOWS_1257.decode(input, DecoderTrap::Strict) {
+        Ok(s) => Ok(s),
+        Err(e) => Err(e.into_owned())
+    }
+}
+
+fn process_encoded(mut encoded_word: Vec<u8>, dll_function: &Fn(*const u8, u16) -> std::io::Result<()>) -> Result<String, String> {
     const LEN: u16 = 4096;
     encoded_word.resize(4096, 0);
-    if let Err(e) = dll_analyze_word(encoded_word.as_mut_ptr() as *const u8, LEN) {
+    if let Err(e) = dll_function(encoded_word.as_mut_ptr() as *const u8, LEN) {
         return Err(e.to_string());
     }
     unsafe {
         let parsed_cstr = CStr::from_ptr(encoded_word.as_ptr() as *const i8);
-        decode_analyze_result(parsed_cstr.to_bytes())
-    }
-}
-
-fn decode_analyze_result(input: &[u8]) -> Result<String, String> {
-    match WINDOWS_1257.decode(input, DecoderTrap::Strict) {
-        Ok(s) => Ok(s),
-        Err(e) => Err(e.into_owned())
+        decode_result(parsed_cstr.to_bytes())
     }
 }
 
@@ -86,9 +86,15 @@ fn main() {
         dll_set_analyze_type(1);
     }
 
-    let word = matches.value_of("WORD_TO_ANALYZE").unwrap();
-    match analyys(word) {
-        Result::Ok(s) => print!("Analyze for {:?}:\n{}", word, s),
-        Result::Err(e) => println!("Error occurred: {}", e)
+    if let Some(submatch) = matches.subcommand_matches("analyze") {
+        let word = submatch.value_of("WORD_TO_PROCESS").unwrap();
+        match analyys(word) {
+            Result::Ok(s) => print!("Analyze for {:?}:\n{}", word, s),
+            Result::Err(e) => println!("Error occurred: {}", e)
+        }
+    }
+    else if let Some(submatch) = matches.subcommand_matches("synthesize") {
+        let _word = submatch.value_of("WORD_TO_PROCESS").unwrap();
+        println!("Synthesize is not implemented yet!")
     }
 }
