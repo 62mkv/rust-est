@@ -16,6 +16,7 @@ use clap::App;
 mod encoding;
 mod analysis;
 mod synthesis;
+mod dynlib;
 
 pub mod delphi_types {
     pub type Char = i8;
@@ -24,8 +25,6 @@ pub mod delphi_types {
 }
 
 fn main() {
-
-    analysis::initialize();
 
     let yaml = load_yaml!("cli.yaml");
     let matches = App::from_yaml(yaml).get_matches();

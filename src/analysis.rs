@@ -1,17 +1,23 @@
-extern crate libloading as dll;
-
 use std::ffi::CStr;
-use std::io::{Error, ErrorKind};
 
-use super::delphi_types;
+use super::delphi_types as dt;
+use super::dynlib;
 use super::encoding;
 
-static mut ANA_DLL: Option<dll::Library> = None;
 const LEN: u16 = 4096;
 
-fn process_encoded(mut encoded_word: Vec<u8>, dll_function: &Fn(*const delphi_types::Char, u16) -> std::io::Result<()>) -> Result<String, String> {
+type AnalyzeSymbol = unsafe extern "stdcall" fn(*const dt::Char, u16) -> ();
+type FormCodeSymbol = unsafe extern "stdcall" fn(u16) -> ();
+
+lazy_static! {
+    static ref ANA_DLL: dynlib::Library = dynlib::initialize_dll("ana.dll");
+    static ref ANA_FN: dynlib::Symbol<'static, AnalyzeSymbol> = dynlib::initialize_dll_function(&ANA_DLL, b"analyys");
+    static ref FORM_CODE_FN: dynlib::Symbol<'static, FormCodeSymbol> = dynlib::initialize_dll_function(&ANA_DLL, b"sea_vxljundvorm");
+}
+
+fn process_encoded(mut encoded_word: Vec<u8>, dll_function: &Fn(*const dt::Char, u16) -> std::io::Result<()>) -> Result<String, String> {
     encoded_word.resize(usize::from(LEN), 0);
-    if let Err(e) = dll_function(encoded_word.as_mut_ptr() as *const delphi_types::Char, LEN) {
+    if let Err(e) = dll_function(encoded_word.as_mut_ptr() as *const dt::Char, LEN) {
         return Err(e.to_string());
     }
     unsafe {
@@ -20,36 +26,15 @@ fn process_encoded(mut encoded_word: Vec<u8>, dll_function: &Fn(*const delphi_ty
     }
 }
 
-fn dll_analyze_word(text: *const delphi_types::Char, len: u16) -> std::io::Result<()> {
+fn dll_analyze_word(text: *const dt::Char, len: u16) -> std::io::Result<()> {
     unsafe {
-        match ANA_DLL {
-            Some(ref lib) => {
-                let fun: dll::Symbol<unsafe extern "stdcall" fn(p: *const delphi_types::Char, len: u16) -> ()> = lib.get(b"analyys")?;
-                Ok(fun(text, len))
-            }
-            None => Err(Error::from(ErrorKind::NotFound))
-        }
+        Ok(ANA_FN(text, len))
     }
 }
 
 pub fn dll_set_analyze_type(code: u16) -> std::io::Result<()> {
     unsafe {
-        match ANA_DLL {
-            Some(ref lib) => {
-                let fun: libloading::Symbol<unsafe extern "stdcall" fn(code: u16) -> ()> = lib.get(b"sea_vxljundvorm")?;
-                Ok(fun(code))
-            }
-            None => Err(Error::from(ErrorKind::NotFound))
-        }
-    }
-}
-
-pub fn initialize() {
-    unsafe {
-        match dll::Library::new("ana.dll") {
-            Ok(lib) => ANA_DLL = Some(lib),
-            Err(_) => panic!("DLL not loaded")
-        }
+        Ok(FORM_CODE_FN(code))
     }
 }
 
