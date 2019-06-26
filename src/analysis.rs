@@ -15,9 +15,9 @@ lazy_static! {
     static ref FORM_CODE_FN: dynlib::Symbol<'static, FormCodeSymbol> = dynlib::initialize_dll_function(&ANA_DLL, b"sea_vxljundvorm");
 }
 
-fn process_encoded(mut encoded_word: Vec<u8>, dll_function: &Fn(*const dt::Char, u16) -> std::io::Result<()>) -> Result<String, String> {
+fn process_encoded(mut encoded_word: Vec<u8>) -> Result<String, String> {
     encoded_word.resize(usize::from(LEN), 0);
-    if let Err(e) = dll_function(encoded_word.as_mut_ptr() as *const dt::Char, LEN) {
+    if let Err(e) = dll_analyze_word(encoded_word.as_mut_ptr() as *const dt::Char, LEN) {
         return Err(e.to_string());
     }
     unsafe {
@@ -40,7 +40,7 @@ pub fn dll_set_analyze_type(code: u16) -> std::io::Result<()> {
 
 pub fn analyze(s: &str) -> Result<String, String> {
     match encoding::encode(s) {
-        Ok(vec) => process_encoded(vec, &dll_analyze_word),
+        Ok(vec) => process_encoded(vec),
         Err(e) => Err(e.into_owned())
     }
 }

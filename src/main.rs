@@ -6,6 +6,7 @@
 //procedure sea_tuletusega (i : boolean); far stdcall external 'ana.dll';
 //procedure sea_liitsqna (i : boolean); far stdcall external 'ana.dll';
 
+extern crate array_init;
 #[macro_use]
 extern crate clap;
 #[macro_use]
@@ -19,7 +20,7 @@ mod synthesis;
 mod dynlib;
 
 pub mod delphi_types {
-    pub type Char = i8;
+    pub type Char = u8;
     pub type PChar = *const Char;
     pub type Integer = i32;
 }
@@ -42,7 +43,10 @@ fn main() {
         }
     }
     else if let Some(submatch) = matches.subcommand_matches("synthesize") {
-        let _word = submatch.value_of("WORD_TO_PROCESS").unwrap();
-        println!("Synthesize is not implemented yet!")
+        let word = submatch.value_of("WORD_TO_PROCESS").unwrap();
+        match synthesis::synthesize(word) {
+            Result::Ok(s) => print!("Synthesize for {:?}:\n{}", word, s),
+            Result::Err(e) => println!("Error occurred: {}", e)
+        }
     }
 }
