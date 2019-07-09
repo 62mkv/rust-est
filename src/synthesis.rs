@@ -2,10 +2,9 @@ use std::ffi::CStr;
 
 use lazy_static;
 
-use crate::delphi_types::Char;
-
 use super::delphi_types as dt;
 use super::dynlib;
+use super::encoding;
 
 //    Function SynthesizeForms(lemma : PChar; withApp : integer; codeType : integer;
 //     var outBuf : array of SynthFormSet; bufLength : integer) : integer; stdcall; external 'fmsynth.dll';
@@ -63,13 +62,15 @@ impl Default for SynthFormSet {
 }
 
 pub fn synthesize(input: &str) -> Result<String, String> {
-    let mut buffer: [SynthFormSet; 300] = array_init::array_init(|_| Default::default());
-    let lemma: [dt::Char; 30] = array_init::array_init(|i| {
+    let mut buffer: [SynthFormSet; 299] = array_init::array_init(|_| Default::default());
+    /*let lemma: [dt::Char; 30] = array_init::array_init(|i| {
         if i < input.len() { input.as_bytes()[i] } else { 0 }
-    });
+    });*/
+    let mut lemma = encoding::encode(input)?;
+    lemma.resize(usize::from(30 as u8), 0);
 
     unsafe {
-        let count = SYNTHESIZE_FN(lemma.as_ptr() as *const dt::Char, 0, 2, &mut buffer, 300);
+        let count = SYNTHESIZE_FN(lemma.as_ptr() as *const dt::Char, 0, 0, &mut buffer, 300);
         Ok(count.to_string())
     }
 }
