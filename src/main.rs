@@ -45,7 +45,7 @@ fn main() {
     else if let Some(submatch) = matches.subcommand_matches("synthesize") {
         let word = submatch.value_of("WORD_TO_PROCESS").unwrap();
         match synthesis::synthesize(word) {
-            Result::Ok(s) => print!("Synthesize for {:?}:\n{}", word, s),
+            Result::Ok(_) => print!("Synthesize for {:?}:\n", word),
             Result::Err(e) => println!("Error occurred: {}", e)
         }
     }
