@@ -68,8 +68,6 @@ impl Default for SynthFormSet {
 const BUF_SIZE: usize = 300;
 
 pub fn synthesize(input: &str) -> Result<(), String> {
-    //    let mut buffer: [SynthFormSet; size] = array_init::array_init(|_| Default::default());
-    //let mut buffer: Box<[SynthFormSet; BUF_SIZE as usize]> = Box::new([Default::default(); BUF_SIZE as usize]);
     let mut lemma = encoding::encode(input)?;
     lemma.resize(usize::from(30 as u8), 0);
 
@@ -98,13 +96,7 @@ pub fn synthesize(input: &str) -> Result<(), String> {
 }
 
 fn synthesize_encoded(word: *const u8) -> ([SynthFormSet; BUF_SIZE], usize) {
-//    let buffer_storage = Box::new(VerboseDrop(
-//        [SynthFormSet::default(); (BUF_SIZE - 1) as usize]
-//    ));
-//    let mut buffer = (*buffer_storage).0;
     let mut buffer = [SynthFormSet::default(); BUF_SIZE];
-
-//    eprintln!("Address of buffer is: {:p}", &*buffer_storage);
 
     let count = usize::try_from(unsafe {
         SYNTHESIZE_FN(

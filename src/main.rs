@@ -14,6 +14,8 @@ extern crate lazy_static;
 
 use clap::App;
 
+use crate::synthesis::synthesize;
+
 mod encoding;
 mod analysis;
 mod synthesis;
@@ -48,5 +50,7 @@ fn main() {
             Result::Ok(_) => print!("Synthesize for {:?}:\n", word),
             Result::Err(e) => println!("Error occurred: {}", e)
         }
+        synthesize("kõrv").expect("Error");
+        synthesize("hea").expect("Error");
     }
 }

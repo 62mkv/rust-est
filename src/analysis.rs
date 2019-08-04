@@ -1,5 +1,3 @@
-use std::ffi::CStr;
-
 use super::delphi_types as dt;
 use super::dynlib;
 use super::encoding;
