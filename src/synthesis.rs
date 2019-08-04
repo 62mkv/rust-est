@@ -72,26 +72,36 @@ pub fn synthesize(input: &str) -> Result<(), String> {
     lemma.resize(usize::from(30 as u8), 0);
 
     let (buffer, count) = synthesize_encoded(lemma.as_ptr());
-    if count < BUF_SIZE {
-        for i in 0..count {
-            let form_set = &buffer[i as usize];
-            let part_of_speech = encoding::decode(&form_set.part_of_speech)?;
-            let form_code = encoding::decode(&form_set.form_code)?;
-            let mut forms = "".to_string();
-            for j in 0..form_set.parallel_forms {
-                let synth_form = &form_set.forms[j as usize];
-                if synth_form.stem_length > 0 {
-                    let form = encoding::decode(&synth_form.form)?;
-                    if j > 0 {
-                        forms.push_str(" ~ ");
-                    }
-                    forms.push_str(&format!("{} ({})", form, synth_form.stem_length));
+    let count = if count > BUF_SIZE { BUF_SIZE } else { count };
+
+    for &SynthFormSet {
+        declination_type,
+        part_of_speech,
+        number_of_options,
+        parallel_forms,
+        form_code,
+        forms,
+    } in &buffer[..count] {
+        let part_of_speech = encoding::decode(&part_of_speech)?;
+        let form_code = encoding::decode(&form_code)?;
+        let mut forms_string = "".to_string();
+
+        for &SynthForm {
+            form,
+            stem_length
+        } in &forms[..usize::try_from(parallel_forms).expect("Overflow")] {
+            if stem_length > 0 {
+                let form_string = encoding::decode(&form)?;
+                if forms_string.len() > 0 {
+                    forms_string.push_str(" ~ ");
                 }
+                forms_string.push_str(&format!("{} ({})", form_string, stem_length));
             }
-            println!("{}, {}, {}, {}, {}, {}", part_of_speech, form_set.declination_type,
-                     form_set.number_of_options, form_set.parallel_forms, form_code, forms);
         }
+        println!("{}, {}, {}, {}, {}, {}", part_of_speech, declination_type,
+                 number_of_options, parallel_forms, form_code, forms_string);
     }
+
     Ok(())
 }
 

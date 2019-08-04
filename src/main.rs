@@ -52,5 +52,6 @@ fn main() {
         }
         synthesize("kõrv").expect("Error");
         synthesize("hea").expect("Error");
+        synthesize("tulema").expect("Error");
     }
 }

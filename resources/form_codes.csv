@@ -1,0 +1,37 @@
+Key; Type; Meaning; Other meanings
+Ab;Case;abessiiv;ilmaütlev
+Abl;Case;ablatiiv;alaltütlev
+Ad;Case;adessiiv;alalütlev
+Adt;Case;aditiiv;suunduv (lühike sisseütlev)
+All;Case;allatiiv;alaleütlev
+El;Case;elatiiv;seestütlev
+Es;Case;essiiv;olev
+G;Case;genitiiv;omastav
+Ger;VerbForm;gerund;
+Ill;Case;illatiiv;sisseütlev
+Imp;Mood;imperatiiv;käskiv
+In;Case;inessiiv;seesütlev
+Ind;Mood;indikatiiv;kindel
+Inf;VerbForm;infinitiiv;
+Ipf;Tense;imperfekt;Lihtminevik
+Ips;Voice;impersonal;umbisikuline 
+Ips_;Voice;impersonal negative;umbisikuline eitav
+Knd;Mood;konditsionaalis;tingiv
+Kom;Case;komitatiiv;kaasaütlev
+Kvt;Mood;kvotatiiv;kaudne
+N;Case;nominatiiv;nimetav
+P;Case;partitiiv;osastav
+Pl;Number;pluural;mitmus
+1;Person;first;
+2;Person;second;
+3;Person;third;
+Pr;Tense;preesens;olevik
+Ps;Voice;personal;
+Ps_;Voice;personal negative;isikuline eitav
+Pt;Tense;perfekt;Täisminevik
+Pts;VerbForm;participle;
+Rpl;VerbForm;Mitmusetüvi;
+Sg;Number;singular;ainsus
+Sup;VerbForm;supiin;
+Ter;Case;terminatiiv;rajav
+Tr;Case;translatiiv;saav
