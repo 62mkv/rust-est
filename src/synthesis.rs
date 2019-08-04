@@ -17,6 +17,7 @@ lazy_static! {
 
 #[repr(C)]
 #[repr(packed)]
+#[derive(Copy, Clone)]
 struct SynthForm {
     //    vorm : array[0..29] of char;
     form: [u8; 30],
@@ -26,13 +27,14 @@ struct SynthForm {
 
 #[repr(C)]
 #[repr(packed)]
+#[derive(Copy, Clone)]
 struct SynthFormSet {
     //    tyybinumber : integer;
-    type_number: i32,
+    declination_type: i32,
     //    sqnaliik : array[0..2] of char;
-    word_member: [u8; 3],
+    part_of_speech: [u8; 3],
     //    variandinumber : integer;
-    option_number: i32,
+    number_of_options: i32,
     //    paralleelvorme : integer;
     parallel_forms: i32,
     //    vormikood : array[0..29] of char;
@@ -53,9 +55,9 @@ impl Default for SynthForm {
 impl Default for SynthFormSet {
     fn default() -> Self {
         SynthFormSet {
-            type_number: 0,
-            word_member: Default::default(),
-            option_number: 0,
+            declination_type: 0,
+            part_of_speech: Default::default(),
+            number_of_options: 0,
             parallel_forms: 0,
             form_code: Default::default(),
             forms: Default::default(),
@@ -64,25 +66,34 @@ impl Default for SynthFormSet {
 }
 
 pub fn synthesize(input: &str) -> Result<(), String> {
-    let mut buffer: [SynthFormSet; 299] = array_init::array_init(|_| Default::default());
+    //    let mut buffer: [SynthFormSet; size] = array_init::array_init(|_| Default::default());
+    const BUF_SIZE: i32 = 300;
+    //let mut buffer: Box<[SynthFormSet; BUF_SIZE as usize]> = Box::new([Default::default(); BUF_SIZE as usize]);
+    let mut buffer = Box::new([SynthFormSet::default(); (BUF_SIZE-1) as usize]);
+
     let mut lemma = encoding::encode(input)?;
     lemma.resize(usize::from(30 as u8), 0);
 
     unsafe {
-        let count = SYNTHESIZE_FN(lemma.as_ptr(), 0, 0, &mut buffer, 300);
-        if count < 300 {
+        let count = SYNTHESIZE_FN(lemma.as_ptr(), 0, 0, &mut *buffer, BUF_SIZE);
+        if count < BUF_SIZE {
             for i in 0..count {
                 let form_set = &buffer[i as usize];
-                let type_number = form_set.type_number;
-                let option_number = form_set.option_number;
-                let parallel_forms = form_set.parallel_forms;
-                let word_member = encoding::decode(&form_set.word_member)?;
+                let part_of_speech = encoding::decode(&form_set.part_of_speech)?;
                 let form_code = encoding::decode(&form_set.form_code)?;
-                println!("{}, {}, {}, {}, {}", word_member, type_number, option_number, parallel_forms, form_code);
-                for j in 0..parallel_forms {
-                    let form = encoding::decode(&form_set.forms[j as usize].form)?;
-                    println!("{}", form);
+                let mut forms = "".to_string();
+                for j in 0..form_set.parallel_forms {
+                    let synth_form = &form_set.forms[j as usize];
+                    if synth_form.stem_length > 0 {
+                        let form = encoding::decode(&synth_form.form)?;
+                        if j > 0 {
+                            forms.push_str(" ~ ");
+                        }
+                        forms.push_str(&format!("{} ({})", form, synth_form.stem_length));
+                    }
                 }
+                println!("{}, {}, {}, {}, {}, {}", part_of_speech, form_set.declination_type,
+                         form_set.number_of_options, form_set.parallel_forms, form_code, forms);
             }
         }
     }

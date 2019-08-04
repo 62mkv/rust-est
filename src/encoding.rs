@@ -1,14 +1,18 @@
 extern crate encoding;
 
 use std::borrow::Cow;
+use std::ffi::CStr;
 
 use encoding::{DecoderTrap, EncoderTrap, Encoding};
 use encoding::all::WINDOWS_1257;
 
 pub fn decode(input: &[u8]) -> Result<String, String> {
-    match WINDOWS_1257.decode(input, DecoderTrap::Strict) {
-        Ok(s) => Ok(s),
-        Err(e) => Err(e.into_owned())
+    unsafe {
+        let parsed_cstr = CStr::from_ptr(input.as_ptr() as *const i8);
+        match WINDOWS_1257.decode(parsed_cstr.to_bytes(), DecoderTrap::Strict) {
+            Ok(s) => Ok(s),
+            Err(e) => Err(e.into_owned())
+        }
     }
 }
 

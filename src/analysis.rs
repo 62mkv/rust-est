@@ -20,10 +20,7 @@ fn process_encoded(mut encoded_word: Vec<u8>) -> Result<String, String> {
     if let Err(e) = dll_analyze_word(encoded_word.as_mut_ptr() as *const dt::Char, LEN) {
         return Err(e.to_string());
     }
-    unsafe {
-        let parsed_cstr = CStr::from_ptr(encoded_word.as_ptr() as *const i8);
-        encoding::decode(parsed_cstr.to_bytes())
-    }
+    encoding::decode(&encoded_word)
 }
 
 fn dll_analyze_word(text: *const dt::Char, len: u16) -> std::io::Result<()> {
