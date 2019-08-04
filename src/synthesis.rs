@@ -1,4 +1,4 @@
-use std::ffi::CStr;
+use std::convert::{TryFrom, TryInto};
 
 use lazy_static;
 
@@ -8,7 +8,7 @@ use super::encoding;
 
 //    Function SynthesizeForms(lemma : PChar; withApp : integer; codeType : integer;
 //     var outBuf : array of SynthFormSet; bufLength : integer) : integer; stdcall; external 'fmsynth.dll';
-type SynthFn<'lib> = dynlib::Symbol<'lib, unsafe extern "stdcall" fn(dt::PChar, dt::Integer, dt::Integer, &mut [SynthFormSet], dt::Integer) -> dt::Integer>;
+type SynthFn<'lib> = dynlib::Symbol<'lib, unsafe extern "stdcall" fn(dt::PChar, dt::Integer, dt::Integer, *mut SynthFormSet, dt::Integer) -> dt::Integer>;
 
 lazy_static! {
     static ref SYNTH_DLL: dynlib::Library = dynlib::initialize_dll("fmsynth.dll");
@@ -65,37 +65,56 @@ impl Default for SynthFormSet {
     }
 }
 
+const BUF_SIZE: usize = 300;
+
 pub fn synthesize(input: &str) -> Result<(), String> {
     //    let mut buffer: [SynthFormSet; size] = array_init::array_init(|_| Default::default());
-    const BUF_SIZE: i32 = 300;
     //let mut buffer: Box<[SynthFormSet; BUF_SIZE as usize]> = Box::new([Default::default(); BUF_SIZE as usize]);
-    let mut buffer = Box::new([SynthFormSet::default(); (BUF_SIZE-1) as usize]);
-
     let mut lemma = encoding::encode(input)?;
     lemma.resize(usize::from(30 as u8), 0);
 
-    unsafe {
-        let count = SYNTHESIZE_FN(lemma.as_ptr(), 0, 0, &mut *buffer, BUF_SIZE);
-        if count < BUF_SIZE {
-            for i in 0..count {
-                let form_set = &buffer[i as usize];
-                let part_of_speech = encoding::decode(&form_set.part_of_speech)?;
-                let form_code = encoding::decode(&form_set.form_code)?;
-                let mut forms = "".to_string();
-                for j in 0..form_set.parallel_forms {
-                    let synth_form = &form_set.forms[j as usize];
-                    if synth_form.stem_length > 0 {
-                        let form = encoding::decode(&synth_form.form)?;
-                        if j > 0 {
-                            forms.push_str(" ~ ");
-                        }
-                        forms.push_str(&format!("{} ({})", form, synth_form.stem_length));
+    let (buffer, count) = synthesize_encoded(lemma.as_ptr());
+    if count < BUF_SIZE {
+        for i in 0..count {
+            let form_set = &buffer[i as usize];
+            let part_of_speech = encoding::decode(&form_set.part_of_speech)?;
+            let form_code = encoding::decode(&form_set.form_code)?;
+            let mut forms = "".to_string();
+            for j in 0..form_set.parallel_forms {
+                let synth_form = &form_set.forms[j as usize];
+                if synth_form.stem_length > 0 {
+                    let form = encoding::decode(&synth_form.form)?;
+                    if j > 0 {
+                        forms.push_str(" ~ ");
                     }
+                    forms.push_str(&format!("{} ({})", form, synth_form.stem_length));
                 }
-                println!("{}, {}, {}, {}, {}, {}", part_of_speech, form_set.declination_type,
-                         form_set.number_of_options, form_set.parallel_forms, form_code, forms);
             }
+            println!("{}, {}, {}, {}, {}, {}", part_of_speech, form_set.declination_type,
+                     form_set.number_of_options, form_set.parallel_forms, form_code, forms);
         }
     }
     Ok(())
+}
+
+fn synthesize_encoded(word: *const u8) -> ([SynthFormSet; BUF_SIZE], usize) {
+//    let buffer_storage = Box::new(VerboseDrop(
+//        [SynthFormSet::default(); (BUF_SIZE - 1) as usize]
+//    ));
+//    let mut buffer = (*buffer_storage).0;
+    let mut buffer = [SynthFormSet::default(); BUF_SIZE];
+
+//    eprintln!("Address of buffer is: {:p}", &*buffer_storage);
+
+    let count = usize::try_from(unsafe {
+        SYNTHESIZE_FN(
+            word,
+            0,
+            0,
+            buffer.as_mut_ptr(),
+            buffer.len().try_into().expect("Overflow"),
+        )
+    }).expect("Overflow");
+    println!("Options found: {}", count);
+    (buffer, count)
 }
