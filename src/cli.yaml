@@ -1,7 +1,7 @@
 name: rust-est
 version: "0.1.0"
 author: Kirill Marchuk <62mkv@mail.ru>
-about: Analyzes Estonian words
+about: Permors analysis and synthesis for Estonian words
 subcommands:
   - analyze:
       about: analyze given word

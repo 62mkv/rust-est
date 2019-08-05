@@ -1,0 +1,61 @@
+@startuml
+
+digraph example1 {
+ case -> noun [label="RELEVANT_FOR"]
+ nominativ -> case [label="KIND_OF"]
+ genitiv -> case [label="KIND_OF"]
+ partitiv -> case [label="KIND_OF"]
+ singular -> number [label="KIND_OF"]
+ plural -> number [label="KIND_OF"]
+ number -> noun [label="RELEVANT_FOR"]
+ 22 -> declination_type [label="KIND_OF"]
+ 22 -> noun [label="RELEVANT_FOR"]
+ language1 [label = "RUSSIAN"]
+
+ lexeme1 [shape=record, label = "{ lexeme1 }" ];
+ lexeme1 -> noun [label="PART_OF_SPEECH"]
+ lexeme1 -> 22 [label="DECLINATION_TYPE"]
+ form1 [shape=record, label= "form1" ];
+ form1 -> nominativ [label="HAS_GRAMM_CAT"]
+ form1 -> singular [label="HAS_GRAMM_CAT"]
+ representation1 [label="õhk"]
+ form1 -> representation1 [label="HAS_REPRESENTATION"]
+ lexeme1 -> form1 [label="HAS_FORM:BasicForm"];
+ representation2 [label= "õhu" ]
+ form2 [shape=record, label= "form2" ];
+ form2 -> genitiv [label="HAS_GRAMM_CAT"]
+ form2 -> singular [label="HAS_GRAMM_CAT"]
+ form2 -> representation2 [label="HAS_REPRESENTATION"]
+ lexeme1 -> form2 [label="HAS_FORM"]
+ representation3 [label= "õhkusid"]
+ representation4 [label= "õhke"]
+ form3 [shape=record, label= "form3" ];
+ form3 -> partitiv [label="HAS_GRAMM_CAT"]
+ form3 -> plural [label="HAS_GRAMM_CAT"]
+ form3 -> representation3 [label="HAS_REPRESENTATION"]
+ form3 -> representation4 [label="HAS_REPRESENTATION"]
+ lexeme1 -> form3 [label="HAS_FORM"]
+ sense1 [shape="record" label = "{sense1 | Maa atmosfääri koostisse kuuluvate gaaside segu}"]
+ sense2 [shape="record" label = "{sense2 | ruumisuhetes: maapinna kohal olev ruum; atmosfäär}"]
+ sense3 [shape="record" label = "{sense3 | lõhn}"]
+
+ lexeme1 -> sense1 [label = "HAS_SENSE"]
+ lexeme1 -> sense2 [label = "HAS_SENSE"]
+ lexeme1 -> sense3 [label = "HAS_SENSE"]
+ translation1 [label = "воздух <воздуха sgt м> ka piltl,
+                        атмосфера <атмосферы sgt ж> kõnek,
+                        дух <духа sgt м> madalk"]
+ translation1 -> language1 [label = "FOR_LANGUAGE"]
+ sense1 -> translation1 [label="HAS_TRANSLATION"]
+
+ translation2 [label = "воздух <воздуха sgt м> ka piltl,
+                        атмосфера <атмосферы sgt ж> ka piltl,
+                        воздушная оболочка [Земли]"]
+ translation2 -> language1 [label = "FOR_LANGUAGE"]
+ sense2 -> translation2 [label="HAS_TRANSLATION"]
+ translation3 [label = "запах <запаха м>,
+                        дух <духа sgt м> madalk"]
+ translation3 -> language1 [label = "FOR_LANGUAGE"]
+ sense3 -> translation3 [label="HAS_TRANSLATION"]
+}
+@enduml

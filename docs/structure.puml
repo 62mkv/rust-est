@@ -1,0 +1,38 @@
+@startuml
+
+class Language {
+}
+
+class Representation {
+  canonical: String
+}
+
+class Form {
+}
+
+class GrammaticalCategory {
+}
+
+class Lexeme {
+  declinationType: Integer
+}
+
+class PartOfSpeech {
+}
+
+class Sense {
+}
+
+class Translation {
+}
+
+Form --> Representation: HAS_REPRESENTATION
+Form --> GrammaticalCategory: HAS_GRAMMATICAL_CATEGORY
+Lexeme --> Form: BASIC_FORM*
+Lexeme --> PartOfSpeech: PART_OF_SPEECH*
+Lexeme --> Form: HAS_FORM
+GrammaticalCategory --> PartOfSpeech: RELEVANT_FOR
+Lexeme --> Sense
+Sense --> Translation: HAS_TRANSLATION
+
+@enduml

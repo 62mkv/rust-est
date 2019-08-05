@@ -1,0 +1,12 @@
+name: EKI XML Dictionary parser
+version: "0.1.0"
+author: Kirill Marchuk <62mkv@mail.ru>
+about: Permors analysis and synthesis for Estonian words
+subcommands:
+  - process:
+      about: Process EKI XML file
+      args:
+        - FILE_TO_PROCESS:
+            help: Path to file for processing
+            index: 1
+            required: true

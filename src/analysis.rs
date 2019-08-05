@@ -1,3 +1,10 @@
+//procedure analyys (p : pchar; len : word); far stdcall external 'ana.dll';
+//procedure tyybituvastus (p : pchar; len : word); far stdcall external 'ana.dll';
+//procedure syntees (p : pchar; len : word); far stdcall external 'ana.dll';
+//procedure sea_vxljundvorm (i : word); far stdcall external 'ana.dll';
+//procedure sea_sqnastikuga (i : boolean); far stdcall external 'ana.dll';
+//procedure sea_tuletusega (i : boolean); far stdcall external 'ana.dll';
+//procedure sea_liitsqna (i : boolean); far stdcall external 'ana.dll';
 use super::delphi_types as dt;
 use super::dynlib;
 use super::encoding;

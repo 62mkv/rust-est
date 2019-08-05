@@ -1,20 +1,9 @@
-//procedure analyys (p : pchar; len : word); far stdcall external 'ana.dll';
-//procedure tyybituvastus (p : pchar; len : word); far stdcall external 'ana.dll';
-//procedure syntees (p : pchar; len : word); far stdcall external 'ana.dll';
-//procedure sea_vxljundvorm (i : word); far stdcall external 'ana.dll';
-//procedure sea_sqnastikuga (i : boolean); far stdcall external 'ana.dll';
-//procedure sea_tuletusega (i : boolean); far stdcall external 'ana.dll';
-//procedure sea_liitsqna (i : boolean); far stdcall external 'ana.dll';
-
-extern crate array_init;
 #[macro_use]
 extern crate clap;
 #[macro_use]
 extern crate lazy_static;
 
 use clap::App;
-
-use crate::synthesis::synthesize;
 
 mod encoding;
 mod analysis;
@@ -50,8 +39,5 @@ fn main() {
             Result::Ok(_) => print!("Synthesize for {:?}:\n", word),
             Result::Err(e) => println!("Error occurred: {}", e)
         }
-        synthesize("kõrv").expect("Error");
-        synthesize("hea").expect("Error");
-        synthesize("tulema").expect("Error");
     }
 }
