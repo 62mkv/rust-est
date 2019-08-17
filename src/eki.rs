@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate clap;
 #[macro_use]
+extern crate enum_display_derive;
+#[macro_use]
 extern crate lazy_static;
 
 use std::{env, fs};
@@ -31,8 +33,6 @@ fn main() {
         println!("Parsing EKI XML file {}", filename);
         let contents = fs::read_to_string(filename)
             .expect("Unable to read a file");
-
-        println!("{}", contents);
 
         match parser::parse(&contents) {
             Ok(res) => println!("{}", res),
