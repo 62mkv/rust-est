@@ -1,8 +1,9 @@
 use std::fmt::{Display, Error, Formatter, Write};
+use std::time::Instant;
 
 use roxmltree::{Document, Node, NodeType};
 
-use evs::PartOfSpeech;
+use evs::{DeclinationType, PartOfSpeech};
 
 pub mod evs;
 
@@ -26,6 +27,7 @@ fn find_children_by_tagname<'a, 'input: 'a>(node: Node<'a, 'input>, path: Vec<&'
     }
 }
 
+#[derive(Debug)]
 struct DisplayOption<T>(pub Option<T>);
 
 impl<T: Display> Display for DisplayOption<T> {
@@ -40,11 +42,12 @@ impl<T: Display> Display for DisplayOption<T> {
 struct Article<'input> {
     lexeme: &'input str,
     part_of_speech: DisplayOption<PartOfSpeech>,
+    declination_type: DisplayOption<DeclinationType>,
 }
 
 impl Display for Article<'_> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        write!(f, "{} [part of speech = {}]", self.lexeme, self.part_of_speech)
+        write!(f, "{} [part of speech = {}, decl. type = {}]", self.lexeme, self.part_of_speech, self.declination_type)
     }
 }
 
@@ -53,6 +56,7 @@ fn parse_article<'a>(article: Node<'a, '_>) -> Result<Article<'a>, String> {
     let node = nodes.get(0).unwrap().to_owned();
     let body_nodes = find_children_by_tagname(node, vec!["m"]).unwrap();
     let part_of_speech_nodes = find_children_by_tagname(node, vec!["sl"]).unwrap();
+    let declination_type_nodes = find_children_by_tagname(node, vec!["grg", "mt"]).unwrap();
     let result = Article {
         lexeme: body_nodes.get(0).unwrap().text().unwrap(),
         part_of_speech: DisplayOption(
@@ -60,6 +64,11 @@ fn parse_article<'a>(article: Node<'a, '_>) -> Result<Article<'a>, String> {
                 .and_then(|n| n.text())
                 .and_then(|t| Some(t.parse().unwrap()))
         ),
+        declination_type: DisplayOption(
+            declination_type_nodes.get(0)
+                .and_then(|n| n.text())
+                .and_then(|t| Some(t.parse().unwrap()))
+        )
     };
     Ok(result)
 }
@@ -67,12 +76,21 @@ fn parse_article<'a>(article: Node<'a, '_>) -> Result<Article<'a>, String> {
 pub fn parse(input: &str) -> Result<String, String> {
     let mut content = String::new();
     write!(content, "<root xmlns:x=\"https://www.w3schools.com/furniture\">{}</root>", input).unwrap();
+
+    let start = Instant::now();
     let doc = Document::parse(&content).unwrap();
+    let duration = start.elapsed();
+    println!("XML parsing complete in {:?}", duration);
+
+    let start = Instant::now();
     let mut str = String::new();
     for node in doc.root_element().children()
         .filter(|n| n.node_type() == NodeType::Element) {
-        println!("Parsed article: {}", parse_article(node).unwrap());
+        let art = parse_article(node).unwrap();
+        if let None = art.part_of_speech.0 {
+            println!("Parsed article: {}", art);
+        }
     }
 
-    Ok("Finished".to_ascii_lowercase())
+    Ok(format!("Processing finished in {:?}", start.elapsed()))
 }

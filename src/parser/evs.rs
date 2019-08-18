@@ -16,18 +16,18 @@ _K_ kaassõna (pre/postpositsioon), nt maja all, üle tee
 _Y_ lühend, nt USA
 */
 
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-type DeclinationType = u8;
+use itertools::Itertools;
 
-pub enum ComparisonDegree {
-    Positive,
-    Comparative,
-    Superlative
+#[derive(Debug)]
+pub struct DeclinationType {
+    types: Vec<u8>
 }
 
-#[derive(Display)]pub enum PartOfSpeech {
+#[derive(Display)]
+pub enum PartOfSpeech {
     Noun,
     Verb,
     Adjective,
@@ -35,7 +35,6 @@ pub enum ComparisonDegree {
     Numeral,
     Pronoun,
     Conjunction,
-    Preposition,
     Interjection
 }
 
@@ -53,11 +52,41 @@ impl FromStr for PartOfSpeech {
             "interj" => Ok(PartOfSpeech::Interjection),
             "konj" => Ok(PartOfSpeech::Conjunction),
             "num" => Ok(PartOfSpeech::Numeral),
+            "pron" => Ok(PartOfSpeech::Pronoun),
             _ => {
                 let mut msg = String::from("Unknown part of speech identifier: ");
                 msg.push_str(s);
                 Err(msg)
             }
         }
+    }
+}
+
+impl FromStr for DeclinationType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(num) = u8::from_str(s) {
+            Ok(DeclinationType {
+                types: vec![num]
+            })
+        } else {
+            let vec = s.split("_&_")
+                .map(|s| s.trim())
+                .map(|s| s.trim_end_matches("?"))
+                .map(|i| u8::from_str(i)
+                    .map_err(|e| format!("error code while parsing value {}", i))
+                    .unwrap())
+                .collect();
+            Ok(DeclinationType {
+                types: vec
+            })
+        }
+    }
+}
+
+impl Display for DeclinationType {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+        write!(f, "{}", self.types.iter().format(", "))
     }
 }
