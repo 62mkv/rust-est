@@ -29,12 +29,13 @@ fn main() {
 
     if let Some(submatch) = matches.subcommand_matches("process") {
         let filename = submatch.value_of("FILE_TO_PROCESS").unwrap();
+        let folder = submatch.value_of("FOLDER_FOR_CSV").unwrap();
 
         println!("Parsing EKI XML file {}", filename);
         let contents = fs::read_to_string(filename)
             .expect("Unable to read a file");
 
-        match parser::parse(&contents) {
+        match parser::parse(&contents, &folder) {
             Ok(res) => println!("{}", res),
             Err(err) => eprintln!("{}", err)
         }

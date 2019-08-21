@@ -26,7 +26,8 @@ pub struct DeclinationType {
     types: Vec<u8>
 }
 
-#[derive(Display)]
+#[derive(Display, Debug)]
+#[derive(PartialEq, Eq, Hash)]
 pub enum PartOfSpeech {
     Noun,
     Verb,
@@ -35,7 +36,9 @@ pub enum PartOfSpeech {
     Numeral,
     Pronoun,
     Conjunction,
-    Interjection
+    Interjection,
+    Preposition,
+    Postposition
 }
 
 impl FromStr for PartOfSpeech {
@@ -53,6 +56,8 @@ impl FromStr for PartOfSpeech {
             "konj" => Ok(PartOfSpeech::Conjunction),
             "num" => Ok(PartOfSpeech::Numeral),
             "pron" => Ok(PartOfSpeech::Pronoun),
+            "postp" => Ok(PartOfSpeech::Postposition),
+            "prep" => Ok(PartOfSpeech::Preposition),
             _ => {
                 let mut msg = String::from("Unknown part of speech identifier: ");
                 msg.push_str(s);
@@ -75,7 +80,7 @@ impl FromStr for DeclinationType {
                 .map(|s| s.trim())
                 .map(|s| s.trim_end_matches("?"))
                 .map(|i| u8::from_str(i)
-                    .map_err(|e| format!("error code while parsing value {}", i))
+                    .map_err(|_| format!("error code while parsing value {}", i))
                     .unwrap())
                 .collect();
             Ok(DeclinationType {

@@ -10,3 +10,7 @@ subcommands:
             help: Path to file for processing
             index: 1
             required: true
+        - FOLDER_FOR_CSV:
+            help: Path to folder, where CSV files will be saved
+            index: 2
+            required: true
