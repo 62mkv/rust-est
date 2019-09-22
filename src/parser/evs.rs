@@ -28,6 +28,7 @@ pub struct DeclinationType {
 
 #[derive(Display, Debug)]
 #[derive(PartialEq, Eq, Hash)]
+#[derive(Ord, PartialOrd)]
 pub enum PartOfSpeech {
     Noun,
     Verb,
