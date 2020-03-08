@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::convert::{TryFrom, TryInto};
 use std::fmt::{Display, Error, Formatter, Write};
 use std::path::Path;
 use std::time::Instant;
@@ -9,6 +10,11 @@ use roxmltree::{Document, Node, NodeType};
 
 use evs::{DeclinationType, PartOfSpeech};
 
+use crate::parser::evs::PartOfSpeech::Verb;
+
+use super::encoding;
+use super::synthesis;
+
 pub mod evs;
 
 fn find_children_by_tagname<'a, 'input: 'a>(node: Node<'a, 'input>, path: Vec<&'input str>) -> Result<Vec<Node<'a, 'input>>, String> {
@@ -16,15 +22,15 @@ fn find_children_by_tagname<'a, 'input: 'a>(node: Node<'a, 'input>, path: Vec<&'
         let mut res: Vec<Node> = Vec::new();
         for child in node.children()
             .filter(|n| (&n.tag_name().name()).eq(path.get(0).unwrap()))
-            {
-                if path.len() > 1 {
-                    if let Ok(mut vec) = find_children_by_tagname(child, path[1..].to_owned()) {
-                        res.append(vec.as_mut());
-                    }
-                } else {
-                    res.push(child);
+        {
+            if path.len() > 1 {
+                if let Ok(mut vec) = find_children_by_tagname(child, path[1..].to_owned()) {
+                    res.append(vec.as_mut());
                 }
+            } else {
+                res.push(child);
             }
+        }
         Ok(res)
     } else {
         Ok(Vec::new())
@@ -143,6 +149,11 @@ pub fn parse(input: &str, folder: &str) -> Result<String, String> {
     let mut parts_of_speech_writer = csv::Writer::from_path(Path::new(folder).join("parts_of_speech.csv")).unwrap();
     parts_of_speech_writer.write_record(&["GUID", "Part of speech"]);
 
+    let mut fmsynth_writer = csv::Writer::from_path(Path::new(folder).join("fmsynth.csv")).unwrap();
+    fmsynth_writer.write_record(&["GUID", "Part of speech", "Declination type",
+        "Options count", "Parallel forms count",
+        "Form code", "Form representation", "Stem length"]);
+
     let mut hs: HashSet<Vec<PartOfSpeech>> = HashSet::new();
 
     let start = Instant::now();
@@ -152,6 +163,32 @@ pub fn parse(input: &str, folder: &str) -> Result<String, String> {
 
         for ref baseform in get_baseforms_per_lexeme(art.lexeme) {
             base_writer.write_record(&[baseform, art.guid]);
+        }
+
+        if let Ok(mut lemma) = encoding::encode(&art.lexeme) {
+            let (buffer, count) = synthesis::synthesize_encoded_vec(lemma);
+
+            for &synthesis::SynthFormSet {
+                declination_type,
+                part_of_speech,
+                number_of_options,
+                parallel_forms,
+                form_code,
+                forms,
+            } in &buffer[..count] {
+                let part_of_speech = encoding::decode(&part_of_speech)?;
+                let form_code = encoding::decode(&form_code)?;
+                for &synthesis::SynthForm {
+                    form,
+                    stem_length
+                } in &forms[..usize::try_from(parallel_forms).expect("Overflow")] {
+                    if stem_length > 0 {
+                        let form_string = encoding::decode(&form)?;
+                        fmsynth_writer.write_record(&[art.guid, &part_of_speech, &declination_type.to_string(),
+                            &number_of_options.to_string(), &parallel_forms.to_string(), &form_code, &form_string, &stem_length.to_string()]);
+                    }
+                }
+            }
         }
 
         if let Some(ref parts_of_speech) = art.part_of_speech.0 {

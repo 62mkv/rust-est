@@ -18,29 +18,29 @@ lazy_static! {
 #[repr(C)]
 #[repr(packed)]
 #[derive(Copy, Clone)]
-struct SynthForm {
+pub struct SynthForm {
     //    vorm : array[0..29] of char;
-    form: [u8; 30],
+    pub form: [u8; 30],
     //    stemLength : integer;
-    stem_length: i32,
+    pub stem_length: i32,
 }
 
 #[repr(C)]
 #[repr(packed)]
 #[derive(Copy, Clone)]
-struct SynthFormSet {
+pub struct SynthFormSet {
     //    tyybinumber : integer;
-    declination_type: i32,
+    pub declination_type: i32,
     //    sqnaliik : array[0..2] of char;
-    part_of_speech: [u8; 3],
+    pub part_of_speech: [u8; 3],
     //    variandinumber : integer;
-    number_of_options: i32,
+    pub number_of_options: i32,
     //    paralleelvorme : integer;
-    parallel_forms: i32,
+    pub parallel_forms: i32,
     //    vormikood : array[0..29] of char;
-    form_code: [u8; 30],
+    pub form_code: [u8; 30],
     //    vormid : array[0..4] of SynthForm;
-    forms: [SynthForm; 5],
+    pub forms: [SynthForm; 5],
 }
 
 impl Default for SynthForm {
@@ -68,10 +68,8 @@ impl Default for SynthFormSet {
 const BUF_SIZE: usize = 300;
 
 pub fn synthesize(input: &str) -> Result<(), String> {
-    let mut lemma = encoding::encode(input)?;
-    lemma.resize(usize::from(30 as u8), 0);
+    let (buffer, count) = synthesize_utf(input);
 
-    let (buffer, count) = synthesize_encoded(lemma.as_ptr());
     let count = if count > BUF_SIZE { BUF_SIZE } else { count };
 
     for &SynthFormSet {
@@ -105,6 +103,17 @@ pub fn synthesize(input: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn synthesize_utf(input: &str) -> ([SynthFormSet; 300], usize) {
+    let mut lemma = encoding::encode(input).unwrap();
+    synthesize_encoded_vec(lemma)
+}
+
+pub fn synthesize_encoded_vec(mut lemma: Vec<u8>) -> ([SynthFormSet; 300], usize) {
+    lemma.resize(usize::from(30 as u8), 0);
+    let (buffer, count) = synthesize_encoded(lemma.as_ptr());
+    (buffer, count)
+}
+
 fn synthesize_encoded(word: *const u8) -> ([SynthFormSet; BUF_SIZE], usize) {
     let mut buffer = [SynthFormSet::default(); BUF_SIZE];
 
@@ -117,6 +126,5 @@ fn synthesize_encoded(word: *const u8) -> ([SynthFormSet; BUF_SIZE], usize) {
             buffer.len().try_into().expect("Overflow"),
         )
     }).expect("Overflow");
-    println!("Options found: {}", count);
     (buffer, count)
 }

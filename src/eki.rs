@@ -11,7 +11,7 @@ use clap::App;
 
 mod encoding;
 mod analysis;
-mod synthesis;
+pub mod synthesis;
 mod dynlib;
 mod parser;
 

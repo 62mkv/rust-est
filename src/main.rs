@@ -5,9 +5,9 @@ extern crate lazy_static;
 
 use clap::App;
 
-mod encoding;
+pub mod encoding;
 mod analysis;
-mod synthesis;
+pub mod synthesis;
 mod dynlib;
 
 pub mod delphi_types {
