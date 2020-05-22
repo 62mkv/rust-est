@@ -23,7 +23,7 @@ use itertools::Itertools;
 
 #[derive(Debug)]
 pub struct DeclinationType {
-    types: Vec<u8>
+    pub types: Vec<u8>
 }
 
 #[derive(Display, Debug)]

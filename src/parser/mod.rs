@@ -149,6 +149,9 @@ pub fn parse(input: &str, folder: &str) -> Result<String, String> {
     let mut parts_of_speech_writer = csv::Writer::from_path(Path::new(folder).join("parts_of_speech.csv")).unwrap();
     parts_of_speech_writer.write_record(&["GUID", "Part of speech"]);
 
+    let mut declination_types_writer = csv::Writer::from_path(Path::new(folder).join("declination_types.csv")).unwrap();
+    declination_types_writer.write_record(&["GUID", "Declination type"]);
+
     let mut fmsynth_writer = csv::Writer::from_path(Path::new(folder).join("fmsynth.csv")).unwrap();
     fmsynth_writer.write_record(&["GUID", "Part of speech", "Declination type",
         "Options count", "Parallel forms count",
@@ -207,6 +210,14 @@ pub fn parse(input: &str, folder: &str) -> Result<String, String> {
             parts_of_speech.sort();
             hs.insert(parts_of_speech);
         }
+
+        if let Some(declination_type) = art.declination_type.0 {
+            for dt in declination_type.types.iter() {
+                let s = format!("{}", dt);
+                declination_types_writer.write_record(&[art.guid, &s]);
+            }
+        }
+
     }
 
     for x in hs.iter() {
@@ -215,6 +226,8 @@ pub fn parse(input: &str, folder: &str) -> Result<String, String> {
 
     base_writer.flush();
     parts_of_speech_writer.flush();
+    declination_types_writer.flush();
+
     Ok(format!("Processing finished in {:?}", start.elapsed()))
 }
 
